@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FacturadorElectronico.Aplicacion\FacturadorElectronico.Aplicacion.csproj" />
+    <ProjectReference Include="..\FacturadorElectronico.Dominio\FacturadorElectronico.Dominio.csproj" />
+  </ItemGroup>
+
+</Project>
