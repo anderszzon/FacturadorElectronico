@@ -1,6 +1,6 @@
 ﻿namespace FacturadorElectronico.Aplicacion.CasosUso.Manejadores
 {
-    internal class ManejadorPruebaConsulta
+    public class ManejadorPruebaConsulta
     {
     }
 }

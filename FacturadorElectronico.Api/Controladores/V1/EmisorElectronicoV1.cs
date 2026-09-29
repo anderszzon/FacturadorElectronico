@@ -22,7 +22,7 @@ namespace FacturadorElectronico.Api.Controladores.V1
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
-            group.MapPost("/fe/autenticacion/api/validarCertificado", async (
+            group.MapPost("/fe/autenticacion/api/validacioncertificado", async (
                     IMediator mediator,
                     [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
             .WithName("ValidarCertificado")
