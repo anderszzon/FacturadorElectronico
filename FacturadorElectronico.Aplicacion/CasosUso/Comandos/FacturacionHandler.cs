@@ -1,4 +1,4 @@
-﻿namespace FacturadorElectronico.Aplicacion.CasosUso.Comandos.Facturacion
+﻿namespace FacturadorElectronico.Aplicacion.CasosUso.Comandos
 {
     public class FacturacionHandler
     {

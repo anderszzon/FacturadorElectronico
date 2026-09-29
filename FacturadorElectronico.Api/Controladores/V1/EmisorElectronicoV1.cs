@@ -1,5 +1,5 @@
-﻿using FacturadorElectronico.Aplicacion.CasosUso.Comandos.Facturacion;
-using FacturadorElectronico.Aplicacion.CasosUso.Consultas.Facturacion;
+﻿using FacturadorElectronico.Aplicacion.CasosUso.Comandos;
+using FacturadorElectronico.Aplicacion.CasosUso.Consultas;
 using MediatR;
 
 namespace FacturadorElectronico.Api.Controladores.V1

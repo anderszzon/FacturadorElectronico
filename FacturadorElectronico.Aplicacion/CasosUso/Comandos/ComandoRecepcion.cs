@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace FacturadorElectronico.Aplicacion.CasosUso.Comandos.Facturacion
+namespace FacturadorElectronico.Aplicacion.CasosUso.Comandos
 {
     public record ComandoRecepcion(
         int Id
