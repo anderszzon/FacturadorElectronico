@@ -1,3 +1,16 @@
+ELIMINE EL REPOSITORIO DE INTERRAPIDISIMO DE LA PLANTILLA ASI:
+
+Remove-Item -Recurse -Force .git
+git init
+dotnet new gitignore
+git add .
+git commit -m "Initial commit - Facturador Electronico DGII"
+
+git remote add origin https://github.com/anderszzon/FacturadorElectronico.git
+git branch -M main
+git push -u origin main
+
+
 # DOTNET_Servicios_Hex_MSCambioDireccionOnPrem
 
 ## Introducción
