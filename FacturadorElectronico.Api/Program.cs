@@ -2,6 +2,7 @@ using DotNetEnv;
 using FacturadorElectronico.Api.Configuraciones;
 using FacturadorElectronico.Api.Extensiones;
 using FacturadorElectronico.Aplicacion.InyeccionDependencias;
+using FacturadorElectronico.Infraestructura.InyeccionDependencias;
 
 Env.Load();
 
@@ -17,6 +18,7 @@ constructor.Services.AddCustomCors(configuracion);
 constructor.Services.AddEndpointsApiExplorer();
 constructor.Services.AddSwaggerGen();
 constructor.Services.AgregarCapaAplicacion();
+constructor.Services.AgregarCapaInfraestructura(constructor.Configuration);
 
 WebApplication app = constructor.Build();
 

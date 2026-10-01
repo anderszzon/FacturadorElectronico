@@ -15,11 +15,23 @@ namespace FacturadorElectronico.Api.Controladores.V1
             .Produces(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
-            group.MapGet("/fe/autenticacion/api/semilla", async (
-                    IMediator mediator,
-                    [AsParameters] ConsultaFacturacion peticion) => await mediator.Send(peticion))
+            //group.MapGet("/fe/autenticacion/api/semilla", async (
+            //        IMediator mediator) => await mediator.Send(new ConsultaAutenticacionSemilla()))
+            //.WithName("Semilla")
+            //.Produces(StatusCodes.Status200OK)
+            //.Produces(StatusCodes.Status400BadRequest);
+
+            group.MapGet("/fe/autenticacion/api/semilla", async (IMediator mediator) =>
+            {
+                var respuesta = await mediator.Send(new ConsultaAutenticacionSemilla());
+                if (respuesta.OperacionExitosa && !string.IsNullOrWhiteSpace(respuesta.Resultado))
+                {
+                    return Results.Text(respuesta.Resultado, contentType: "application/xml", statusCode: StatusCodes.Status200OK);
+                }
+                return Results.BadRequest(respuesta.Mensaje);
+            })
             .WithName("Semilla")
-            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status200OK, contentType: "application/xml")
             .Produces(StatusCodes.Status400BadRequest);
 
             group.MapPost("/fe/autenticacion/api/validacioncertificado", async (
