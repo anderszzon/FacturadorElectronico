@@ -8,12 +8,12 @@ namespace FacturadorElectronico.Api.Controladores.V1
     {
         public static RouteGroupBuilder MapEmisorElectronico(this RouteGroupBuilder group)
         {
-            group.MapGet("PruebaConsulta", async (
-                    IMediator mediator,
-                    [AsParameters] ConsultaFacturacion peticion) => await mediator.Send(peticion))
-            .WithName("PruebaConsulta")
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status400BadRequest);
+            //group.MapGet("PruebaConsulta", async (
+            //        IMediator mediator,
+            //        [AsParameters] ConsultaFacturacion peticion) => await mediator.Send(peticion))
+            //.WithName("PruebaConsulta")
+            //.Produces(StatusCodes.Status200OK)
+            //.Produces(StatusCodes.Status400BadRequest);
 
             //group.MapGet("/fe/autenticacion/api/semilla", async (
             //        IMediator mediator) => await mediator.Send(new ConsultaAutenticacionSemilla()))

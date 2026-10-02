@@ -44,16 +44,16 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
 
             // 5. Armar el XML del Acuse de Recibo con las declaraciones XML Schema Instance (xsi)
             string respuestaXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-                                <ARECF xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
-                                    <DetalleAcuseDeRecibo>
-                                        <Version>1.0</Version>
-                                        <RNCEmisor>{rncEmisor}</RNCEmisor>
-                                        <RNCComprador>{rncComprador}</RNCComprador>
-                                        <eNCF>{eNCF}</eNCF>
-                                        <Estado>0</Estado>
-                                        <FechaHoraAcuseRecibo>{fechaHoraActual}</FechaHoraAcuseRecibo>
-                                    </DetalleAcuseDeRecibo>
-                                </ARECF>";
+                                    <ARECF xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+                                        <DetalleAcusedeRecibo>
+                                            <Version>1.0</Version>
+                                            <RNCEmisor>{rncEmisor}</RNCEmisor>
+                                            <RNCComprador>{rncComprador}</RNCComprador>
+                                            <eNCF>{eNCF}</eNCF>
+                                            <Estado>0</Estado>
+                                            <FechaHoraAcuseRecibo>{fechaHoraActual}</FechaHoraAcuseRecibo>
+                                        </DetalleAcusedeRecibo>
+                                    </ARECF>";
 
             // 6. Devolver el XML directamente
             return Respuesta<string>.Ok(respuestaXml);
