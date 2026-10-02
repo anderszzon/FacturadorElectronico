@@ -2,6 +2,7 @@
 using FacturadorElectronico.Aplicacion.Envoltorios;
 using FacturadorElectronico.Aplicacion.Puertos;
 using MediatR;
+using System.Xml.Linq;
 
 public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
     : IRequestHandler<ComandoRecepcionEcf, Respuesta<string>>
@@ -22,38 +23,44 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
             return Respuesta<string>.Fail("El token de autorización (Bearer) es requerido.");
         }
 
-        string urlRecepcion = "https://ecf.dgii.gov.do/testecf/recepcion/api/ecf";
-
         try
         {
-            string xmlContenido;
-            using (var streamReader = new StreamReader(request.Xml.OpenReadStream()))
+            // 3. Leer el XML entrante
+            string xmlEntrante;
+            using (var reader = new StreamReader(request.Xml.OpenReadStream()))
             {
-                xmlContenido = await streamReader.ReadToEndAsync();
+                xmlEntrante = await reader.ReadToEndAsync(cancellationToken);
             }
 
-            // Tomar el nombre del archivo recibido o usar uno por defecto si viene vacío
-            string nombreArchivoXml = !string.IsNullOrWhiteSpace(request.Xml.FileName)
-                ? request.Xml.FileName
-                : "ecf.xml";
+            // 4. Extraer campos del XML entrante
+            XDocument doc = XDocument.Parse(xmlEntrante);
+            XNamespace ns = doc.Root?.Name.Namespace ?? XNamespace.None;
 
-            string xmlRespuestaAcuse = await _autenticacion.ProcesarRecepcionEcfXmlAsync(
-                urlRecepcion,
-                xmlContenido,
-                request.TokenBearer,
-                nombreArchivoXml,
-                cancellationToken);
+            string rncEmisor = doc.Descendants(ns + "RNCEmisor").FirstOrDefault()?.Value ?? "";
+            string rncComprador = doc.Descendants(ns + "RNCComprador").FirstOrDefault()?.Value ?? "";
+            string eNCF = doc.Descendants(ns + "eNCF").FirstOrDefault()?.Value ?? "";
 
-            if (string.IsNullOrWhiteSpace(xmlRespuestaAcuse))
-            {
-                return Respuesta<string>.Fail("No se obtuvo respuesta de acuse por parte de la DGII.");
-            }
+            string fechaHoraActual = DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss");
 
-            return Respuesta<string>.Ok(xmlRespuestaAcuse);
+            // 5. Armar el XML del Acuse de Recibo con las declaraciones XML Schema Instance (xsi)
+            string respuestaXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+                                <ARECF xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+                                    <DetalleAcuseDeRecibo>
+                                        <Version>1.0</Version>
+                                        <RNCEmisor>{rncEmisor}</RNCEmisor>
+                                        <RNCComprador>{rncComprador}</RNCComprador>
+                                        <eNCF>{eNCF}</eNCF>
+                                        <Estado>0</Estado>
+                                        <FechaHoraAcuseRecibo>{fechaHoraActual}</FechaHoraAcuseRecibo>
+                                    </DetalleAcuseDeRecibo>
+                                </ARECF>";
+
+            // 6. Devolver el XML directamente
+            return Respuesta<string>.Ok(respuestaXml);
         }
         catch (Exception ex)
         {
-            return Respuesta<string>.Fail($"Error en la recepción de e-CF: {ex.Message}");
+            return Respuesta<string>.Fail($"Error procesando acuse: {ex.Message}");
         }
     }
 }
