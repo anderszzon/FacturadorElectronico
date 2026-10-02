@@ -20,6 +20,12 @@
       <HintPath>..\lib\ConexionDGII.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <!--<ProjectReference Include="..\..\FacturacionElectronicaDGII-repo\ConexionDGIINETFramework.csproj" />-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="runtime.native.System.Security.Cryptography" Version="4.3.4" />
+    <PackageReference Include="System.Security.Cryptography.Csp" Version="4.3.0" />
   </ItemGroup>
   
 </Project>

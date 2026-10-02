@@ -34,26 +34,85 @@ namespace FacturadorElectronico.Api.Controladores.V1
             .Produces(StatusCodes.Status200OK, contentType: "application/xml")
             .Produces(StatusCodes.Status400BadRequest);
 
+            //group.MapPost("/fe/autenticacion/api/validacioncertificado", async (
+            //        IMediator mediator,
+            //        [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
+            //.WithName("ValidarCertificado")
+            //.Produces(StatusCodes.Status200OK)
+            //.Produces(StatusCodes.Status400BadRequest);
+
             group.MapPost("/fe/autenticacion/api/validacioncertificado", async (
-                    IMediator mediator,
-                    [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
+                IFormFile xml,
+                IMediator mediator) =>
+            {
+                var comando = new ComandoValidarCertificado(xml);
+                var respuesta = await mediator.Send(comando);
+
+                if (respuesta.OperacionExitosa && respuesta.Resultado != null)
+                {
+                    return Results.Ok(respuesta.Resultado);
+                }
+
+                return Results.BadRequest(respuesta.Mensaje);
+            })
             .WithName("ValidarCertificado")
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status400BadRequest);
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces<RespuestaTokenDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .DisableAntiforgery();
+
+            //group.MapPost("/fe/recepcion/api/ecf", async (
+            //        IMediator mediator,
+            //        [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
+            //.WithName("Recepcion")
+            //.Produces(StatusCodes.Status200OK)
+            //.Produces(StatusCodes.Status400BadRequest);
 
             group.MapPost("/fe/recepcion/api/ecf", async (
-                    IMediator mediator,
-                    [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
-            .WithName("Recepcion")
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status400BadRequest);
+                IFormFile xml,
+                HttpContext httpContext,
+                IMediator mediator) =>
+            {
+                // Extraer el token Bearer del header 'Authorization' (Case-Insensitive)
+                string tokenBearer = httpContext.Request.Headers["Authorization"].ToString();
 
-            group.MapPost("/fe/aprobacioncomercial/api/ecf", async (
-                    IMediator mediator,
-                    [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
-            .WithName("AprobacionComercial")
-            .Produces(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status400BadRequest);
+                if (string.IsNullOrWhiteSpace(tokenBearer))
+                {
+                    tokenBearer = httpContext.Request.Headers["authorization"].ToString();
+                }
+
+                var comando = new ComandoRecepcionEcf(xml, tokenBearer);
+                var respuesta = await mediator.Send(comando);
+
+                if (respuesta.OperacionExitosa && !string.IsNullOrWhiteSpace(respuesta.Resultado))
+                {
+                    // Devolver el XML de respuesta / Acuse de Recibo con Content-Type application/xml
+                    return Results.Text(respuesta.Resultado, contentType: "application/xml", statusCode: StatusCodes.Status200OK);
+                }
+
+                return Results.BadRequest(respuesta.Mensaje);
+            })
+            .WithName("Recepcion")
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces(StatusCodes.Status200OK, contentType: "application/xml")
+            .Produces(StatusCodes.Status400BadRequest)
+            .DisableAntiforgery();
+
+            //group.MapPost("/fe/aprobacioncomercial/api/ecf", async (
+            //        IMediator mediator,
+            //        [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
+            //.WithName("AprobacionComercial")
+            //.Produces(StatusCodes.Status200OK)
+            //.Produces(StatusCodes.Status400BadRequest);
+
+
+
+            //group.MapPost("/fe/aprobacioncomercial/api/ecf", async (
+            //        IMediator mediator,
+            //        [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
+            //.WithName("AprobacionComercial")
+            //.Produces(StatusCodes.Status200OK)
+            //.Produces(StatusCodes.Status400BadRequest);
 
             return group;
         }
