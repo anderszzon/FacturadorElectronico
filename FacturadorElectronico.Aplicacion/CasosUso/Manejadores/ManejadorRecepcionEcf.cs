@@ -2,6 +2,7 @@
 using FacturadorElectronico.Aplicacion.Envoltorios;
 using FacturadorElectronico.Aplicacion.Puertos;
 using MediatR;
+using System.Globalization;
 using System.Xml.Linq;
 
 public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
@@ -34,31 +35,37 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
 
             // 4. Extraer campos del XML entrante
             XDocument doc = XDocument.Parse(xmlEntrante);
-            XNamespace ns = doc.Root?.Name.Namespace ?? XNamespace.None;
 
-            string rncEmisor = doc.Descendants(ns + "RNCEmisor").FirstOrDefault()?.Value ?? "";
-            string rncComprador = doc.Descendants(ns + "RNCComprador").FirstOrDefault()?.Value ?? "";
-            string eNCF = doc.Descendants(ns + "eNCF").FirstOrDefault()?.Value ?? "";
+            // Búsqueda flexible por LocalName por si el XML e-CF entrante incluye o no Namespace
+            string rncEmisor = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "RNCEmisor")?.Value ?? "";
+            string rncComprador = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "RNCComprador")?.Value ?? "";
+            string eNCF = doc.Descendants().FirstOrDefault(x => x.Name.LocalName == "eNCF")?.Value ?? "";
 
-            string fechaHoraActual = DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss");
+            // Formato de fecha estricto dd-MM-yyyy HH:mm:ss según XSD de la DGII
+            string fechaHoraActual = DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
-            // 5. Armar el XML del Acuse de Recibo con las declaraciones XML Schema Instance (xsi)
-            string xmlSinFirmar = $@"<?xml version=""1.0"" encoding=""utf-8""?>
-                                    <ARECF xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
-                                        <DetalleAcusedeRecibo>
-                                            <Version>1.0</Version>
-                                            <RNCEmisor>{rncEmisor}</RNCEmisor>
-                                            <RNCComprador>{rncComprador}</RNCComprador>
-                                            <eNCF>{eNCF}</eNCF>
-                                            <Estado>0</Estado>
-                                            <FechaHoraAcuseRecibo>{fechaHoraActual}</FechaHoraAcuseRecibo>
-                                        </DetalleAcusedeRecibo>
-                                    </ARECF>";
+            XNamespace ns = "http://www.dgii.gov.do/ecf/v1.0";
+            XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
 
-            // 6. Firmar el XML del Acuse de Recibo
+            var docArecf = new XDocument(
+                        new XDeclaration("1.0", "utf-8", "no"),
+                        new XElement(ns + "ARECF",
+                            new XAttribute(XNamespace.Xmlns + "xsi", xsi),
+                            new XElement(ns + "DetalleAcusedeRecibo",
+                                new XElement(ns + "Version", "1.0"),
+                                new XElement(ns + "RNCEmisor", rncEmisor),
+                                new XElement(ns + "RNCComprador", rncComprador),
+                                new XElement(ns + "eNCF", eNCF),
+                                new XElement(ns + "Estado", "0"),
+                                new XElement(ns + "FechaHoraAcuseRecibo", fechaHoraActual)
+                            )
+                        )
+                    );
+
+            string xmlSinFirmar = docArecf.ToString(SaveOptions.DisableFormatting);
+
             string xmlFirmado = _autenticacion.FirmarAcuseRecibo(xmlSinFirmar);
 
-            // 7. Devolver el XML firmado
             return Respuesta<string>.Ok(xmlFirmado);
         }
         catch (Exception ex)

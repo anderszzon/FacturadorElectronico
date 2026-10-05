@@ -69,9 +69,9 @@ namespace FacturadorElectronico.Api.Controladores.V1
             //.Produces(StatusCodes.Status400BadRequest);
 
             group.MapPost("/fe/recepcion/api/ecf", async (
-                IFormFile xml,
-                HttpContext httpContext,
-                IMediator mediator) =>
+                            IFormFile xml,
+                            HttpContext httpContext,
+                            IMediator mediator) =>
             {
                 // Extraer el token Bearer del header 'Authorization' (Case-Insensitive)
                 string tokenBearer = httpContext.Request.Headers["Authorization"].ToString();
@@ -86,17 +86,21 @@ namespace FacturadorElectronico.Api.Controladores.V1
 
                 if (respuesta.OperacionExitosa && !string.IsNullOrWhiteSpace(respuesta.Resultado))
                 {
-                    // Devolver el XML de respuesta / Acuse de Recibo con Content-Type application/xml
-                    return Results.Text(respuesta.Resultado, contentType: "application/xml", statusCode: StatusCodes.Status200OK);
+                    // Forzar el Content-Type requerido por el validador de la DGII
+                    return Results.Text(
+                        content: respuesta.Resultado,
+                        contentType: "text/xml; charset=utf-8",
+                        statusCode: StatusCodes.Status200OK
+                    );
                 }
 
                 return Results.BadRequest(respuesta.Mensaje);
             })
-            .WithName("Recepcion")
-            .Accepts<IFormFile>("multipart/form-data")
-            .Produces(StatusCodes.Status200OK, contentType: "application/xml")
-            .Produces(StatusCodes.Status400BadRequest)
-            .DisableAntiforgery();
+                        .WithName("Recepcion")
+                        .Accepts<IFormFile>("multipart/form-data")
+                        .Produces(StatusCodes.Status200OK, contentType: "text/xml")
+                        .Produces(StatusCodes.Status400BadRequest)
+                        .DisableAntiforgery();
 
             //group.MapPost("/fe/aprobacioncomercial/api/ecf", async (
             //        IMediator mediator,
