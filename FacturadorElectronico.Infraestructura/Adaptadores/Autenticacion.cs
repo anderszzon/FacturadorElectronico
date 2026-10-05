@@ -18,5 +18,10 @@ namespace FacturadorElectronico.Infraestructura.Adaptadores
         {
             return await FacturacionElectronicaDGII.EnviarFacturaElectronicaAsync(urlRecepcion, xmlEcf, tokenBearer, nombreArchivoXml, cancellationToken);
         }
+
+        public string FirmarAcuseRecibo(string xmlAcuseSinFirmar, string passCert = "")
+        {
+            return FacturacionElectronicaDGII.FirmarAcuseRecibo(xmlAcuseSinFirmar, passCert);
+        }
     }
 }

@@ -43,7 +43,7 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
             string fechaHoraActual = DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss");
 
             // 5. Armar el XML del Acuse de Recibo con las declaraciones XML Schema Instance (xsi)
-            string respuestaXml = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+            string xmlSinFirmar = $@"<?xml version=""1.0"" encoding=""utf-8""?>
                                     <ARECF xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
                                         <DetalleAcusedeRecibo>
                                             <Version>1.0</Version>
@@ -55,8 +55,11 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
                                         </DetalleAcusedeRecibo>
                                     </ARECF>";
 
-            // 6. Devolver el XML directamente
-            return Respuesta<string>.Ok(respuestaXml);
+            // 6. Firmar el XML del Acuse de Recibo
+            string xmlFirmado = _autenticacion.FirmarAcuseRecibo(xmlSinFirmar);
+
+            // 7. Devolver el XML firmado
+            return Respuesta<string>.Ok(xmlFirmado);
         }
         catch (Exception ex)
         {
