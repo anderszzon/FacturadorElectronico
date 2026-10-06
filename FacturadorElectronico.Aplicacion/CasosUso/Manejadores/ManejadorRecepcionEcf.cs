@@ -51,19 +51,19 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
             XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
 
             var docArecf = new XDocument(
-                        new XDeclaration("1.0", "utf-8", "no"),
-                        new XElement(ns + "ARECF",
-                            new XAttribute(XNamespace.Xmlns + "xsi", xsi),
-                            new XElement(ns + "DetalleAcusedeRecibo",
-                                new XElement(ns + "Version", "1.0"),
-                                new XElement(ns + "RNCEmisor", rncEmisor),
-                                new XElement(ns + "RNCComprador", rncComprador),
-                                new XElement(ns + "eNCF", eNCF),
-                                new XElement(ns + "Estado", "0"),
-                                new XElement(ns + "FechaHoraAcuseRecibo", fechaHoraActual)
-                            )
-                        )
-                    );
+                new XDeclaration("1.0", "utf-8", null),
+                new XElement(ns + "ARECF",
+                    new XAttribute(XNamespace.Xmlns + "xsi", xsi),
+                    new XElement(ns + "DetalleAcusedeRecibo",
+                        new XElement(ns + "Version", "1.0"),
+                        new XElement(ns + "RNCEmisor", rncEmisor),
+                        new XElement(ns + "RNCComprador", rncComprador),
+                        new XElement(ns + "eNCF", eNCF),
+                        new XElement(ns + "Estado", "0"),
+                        new XElement(ns + "FechaHoraAcuseRecibo", fechaHoraActual)
+                    )
+                )
+            );
 
             string xmlSinFirmar = docArecf.ToString(SaveOptions.DisableFormatting);
 
