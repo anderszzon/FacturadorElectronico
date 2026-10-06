@@ -2,6 +2,8 @@
 using FacturadorElectronico.Aplicacion.Envoltorios;
 using FacturadorElectronico.Aplicacion.Puertos;
 using MediatR;
+using Microsoft.Data.SqlClient;
+using System.Data;
 using System.Globalization;
 using System.Xml.Linq;
 
@@ -10,6 +12,7 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
 {
     private readonly IAutenticacion _autenticacion = autenticacion;
 
+    private const string CadenaConexion = "Server=tcp:mtpprod.database.windows.net,1433;Initial Catalog=MTPDatabase;Persist Security Info=False;User ID=MTPadmin;Password=Pass@word1;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
     public async Task<Respuesta<string>> Handle(ComandoRecepcionEcf request, CancellationToken cancellationToken)
     {
         // 1. Validar presencia del archivo XML
@@ -66,11 +69,41 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
 
             string xmlFirmado = _autenticacion.FirmarAcuseRecibo(xmlSinFirmar);
 
+            await GuardarEnBaseDeDatosAsync(rncEmisor, rncComprador, eNCF, xmlEntrante, xmlFirmado, cancellationToken);
+
             return Respuesta<string>.Ok(xmlFirmado);
         }
         catch (Exception ex)
         {
             return Respuesta<string>.Fail($"Error procesando acuse: {ex.Message}");
+        }
+    }
+
+    private async Task GuardarEnBaseDeDatosAsync(
+        string rncEmisor, 
+        string rncComprador, 
+        string eNCF, 
+        string xmlEntrante, 
+        string xmlFirmado, 
+        CancellationToken cancellationToken)
+    {
+        const string query = @"
+            INSERT INTO EcfRecepcionLog (RNCEmisor, RNCComprador, eNCF, XmlEntrante, XmlRespuestaFirmado, FechaRegistro)
+            VALUES (@RNCEmisor, @RNCComprador, @eNCF, @XmlEntrante, @XmlRespuestaFirmado, GETDATE());";
+
+        using (var connection = new SqlConnection(CadenaConexion))
+        {
+            await connection.OpenAsync(cancellationToken);
+            using (var command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@RNCEmisor", SqlDbType.VarChar, 20).Value = rncEmisor;
+                command.Parameters.Add("@RNCComprador", SqlDbType.VarChar, 20).Value = rncComprador;
+                command.Parameters.Add("@eNCF", SqlDbType.VarChar, 20).Value = eNCF;
+                command.Parameters.Add("@XmlEntrante", SqlDbType.NVarChar, -1).Value = xmlEntrante;
+                command.Parameters.Add("@XmlRespuestaFirmado", SqlDbType.NVarChar, -1).Value = xmlFirmado;
+
+                await command.ExecuteNonQueryAsync(cancellationToken);
+            }
         }
     }
 }
