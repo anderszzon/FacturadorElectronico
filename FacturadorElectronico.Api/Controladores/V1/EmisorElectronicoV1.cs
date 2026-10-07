@@ -1,6 +1,7 @@
 ﻿using FacturadorElectronico.Aplicacion.CasosUso.Comandos;
 using FacturadorElectronico.Aplicacion.CasosUso.Consultas;
 using MediatR;
+using System.Text;
 
 namespace FacturadorElectronico.Api.Controladores.V1
 {
@@ -69,38 +70,46 @@ namespace FacturadorElectronico.Api.Controladores.V1
             //.Produces(StatusCodes.Status400BadRequest);
 
             group.MapPost("/fe/recepcion/api/ecf", async (
-                            IFormFile xml,
-                            HttpContext httpContext,
-                            IMediator mediator) =>
+                HttpContext httpContext,
+                IMediator mediator) =>
             {
-                // Extraer el token Bearer del header 'Authorization' (Case-Insensitive)
-                string tokenBearer = httpContext.Request.Headers["Authorization"].ToString();
+                // 1. Obtener el archivo multipart sin importar el nombre del campo del Form
+                var file = httpContext.Request.Form.Files.FirstOrDefault();
+                if (file == null || file.Length == 0)
+                {
+                    return Results.BadRequest("No se recibió ningún archivo XML en la petición.");
+                }
 
+                // 2. Extraer el token Bearer del header 'Authorization'
+                string tokenBearer = httpContext.Request.Headers["Authorization"].ToString();
                 if (string.IsNullOrWhiteSpace(tokenBearer))
                 {
                     tokenBearer = httpContext.Request.Headers["authorization"].ToString();
                 }
 
-                var comando = new ComandoRecepcionEcf(xml, tokenBearer);
+                // 3. Procesar y firmar el Acuse de Recibo
+                var comando = new ComandoRecepcionEcf(file, tokenBearer);
                 var respuesta = await mediator.Send(comando);
 
                 if (respuesta.OperacionExitosa && !string.IsNullOrWhiteSpace(respuesta.Resultado))
                 {
-                    // Forzar el Content-Type requerido por el validador de la DGII
-                    return Results.Text(
-                        content: respuesta.Resultado,
-                        contentType: "text/xml; charset=utf-8",
-                        statusCode: StatusCodes.Status200OK
-                    );
+                    // 4. Crear codificación UTF-8 pura SIN BOM (false)
+                    var utf8WithoutBom = new UTF8Encoding(false);
+                    byte[] xmlBytes = utf8WithoutBom.GetBytes(respuesta.Resultado);
+
+                    // 5. Retornar directamente los bytes garantizando cero caracteres de control
+                    return Results.Bytes(
+                        contents: xmlBytes,
+                        contentType: "text/xml; charset=utf-8"                    );
                 }
 
                 return Results.BadRequest(respuesta.Mensaje);
             })
-                        .WithName("Recepcion")
-                        .Accepts<IFormFile>("multipart/form-data")
-                        .Produces(StatusCodes.Status200OK, contentType: "text/xml")
-                        .Produces(StatusCodes.Status400BadRequest)
-                        .DisableAntiforgery();
+            .WithName("Recepcion")
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces(StatusCodes.Status200OK, contentType: "text/xml")
+            .Produces(StatusCodes.Status400BadRequest)
+            .DisableAntiforgery();
 
             //group.MapPost("/fe/aprobacioncomercial/api/ecf", async (
             //        IMediator mediator,
