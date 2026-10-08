@@ -154,6 +154,38 @@ namespace FacturadorElectronico.Api.Controladores.V1
             .Produces(StatusCodes.Status400BadRequest)
             .DisableAntiforgery();
 
+            group.MapPost("/fe/declaracionjurada/firmar", async (
+                IFormFile file,
+                IMediator mediator) =>
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return Results.BadRequest("No se recibió ningún archivo XML.");
+                }
+
+                var comando = new ComandoFirmarDeclaracionJurada(file);
+                var respuesta = await mediator.Send(comando);
+
+                if (respuesta.OperacionExitosa && !string.IsNullOrWhiteSpace(respuesta.Resultado))
+                {
+                    var utf8WithoutBom = new UTF8Encoding(false);
+                    byte[] xmlBytes = utf8WithoutBom.GetBytes(respuesta.Resultado);
+
+                    return Results.File(
+                        fileContents: xmlBytes,
+                        contentType: "text/xml; charset=utf-8",
+                        fileDownloadName: "DeclaracionJurada_Firmada.xml"
+                    );
+                }
+
+                return Results.BadRequest(respuesta.Mensaje);
+            })
+            .WithName("FirmarDeclaracionJurada")
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .DisableAntiforgery();
+
 
             return group;
         }
