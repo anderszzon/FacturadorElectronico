@@ -47,20 +47,17 @@ public class ManejadorRecepcionEcf(IAutenticacion autenticacion)
             // Formato de fecha estricto dd-MM-yyyy HH:mm:ss según XSD de la DGII
             string fechaHoraActual = DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss", CultureInfo.InvariantCulture);
 
-            XNamespace ns = "http://www.dgii.gov.do/ecf/v1.0";
-            XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
-
             var docArecf = new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
-                new XElement(ns + "ARECF",
-                    new XAttribute(XNamespace.Xmlns + "xsi", xsi),
-                    new XElement(ns + "DetalleAcusedeRecibo",
-                        new XElement(ns + "Version", "1.0"),
-                        new XElement(ns + "RNCEmisor", rncEmisor),
-                        new XElement(ns + "RNCComprador", rncComprador),
-                        new XElement(ns + "eNCF", eNCF),
-                        new XElement(ns + "Estado", "0"),
-                        new XElement(ns + "FechaHoraAcuseRecibo", fechaHoraActual)
+                new XElement("ARECF",
+                    new XAttribute(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance"),
+                    new XElement("DetalleAcusedeRecibo",
+                        new XElement("Version", "1.0"),
+                        new XElement("RNCEmisor", rncEmisor),
+                        new XElement("RNCComprador", rncComprador),
+                        new XElement("eNCF", eNCF),
+                        new XElement("Estado", "0"),
+                        new XElement("FechaHoraAcuseRecibo", fechaHoraActual)
                     )
                 )
             );
