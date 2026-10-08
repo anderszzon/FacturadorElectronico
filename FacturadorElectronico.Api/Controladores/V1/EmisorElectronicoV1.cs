@@ -111,21 +111,49 @@ namespace FacturadorElectronico.Api.Controladores.V1
             .Produces(StatusCodes.Status400BadRequest)
             .DisableAntiforgery();
 
-            //group.MapPost("/fe/aprobacioncomercial/api/ecf", async (
-            //        IMediator mediator,
-            //        [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
-            //.WithName("AprobacionComercial")
-            //.Produces(StatusCodes.Status200OK)
-            //.Produces(StatusCodes.Status400BadRequest);
+            group.MapPost("/fe/aprobacioncomercial/api/ecf", async (
+                HttpContext httpContext,
+                IMediator mediator) =>
+            {
+                // 1. Obtener el archivo multipart sin importar el nombre del campo del Form
+                var file = httpContext.Request.Form.Files.FirstOrDefault();
+                if (file == null || file.Length == 0)
+                {
+                    return Results.BadRequest("No se recibió ningún archivo XML en la petición.");
+                }
 
+                // 2. Extraer el token Bearer del header 'Authorization'
+                string tokenBearer = httpContext.Request.Headers["Authorization"].ToString();
+                if (string.IsNullOrWhiteSpace(tokenBearer))
+                {
+                    tokenBearer = httpContext.Request.Headers["authorization"].ToString();
+                }
 
+                // 3. Procesar y firmar la Aprobación Comercial (ACECF)
+                var comando = new ComandoAprobacionComercialEcf(file, tokenBearer);
+                var respuesta = await mediator.Send(comando);
 
-            //group.MapPost("/fe/aprobacioncomercial/api/ecf", async (
-            //        IMediator mediator,
-            //        [AsParameters] ComandoRecepcion peticion) => await mediator.Send(peticion))
-            //.WithName("AprobacionComercial")
-            //.Produces(StatusCodes.Status200OK)
-            //.Produces(StatusCodes.Status400BadRequest);
+                if (respuesta.OperacionExitosa && !string.IsNullOrWhiteSpace(respuesta.Resultado))
+                {
+                    // 4. Crear codificación UTF-8 pura SIN BOM (false)
+                    var utf8WithoutBom = new UTF8Encoding(false);
+                    byte[] xmlBytes = utf8WithoutBom.GetBytes(respuesta.Resultado);
+
+                    // 5. Retornar directamente los bytes garantizando cero caracteres de control
+                    return Results.Bytes(
+                        contents: xmlBytes,
+                        contentType: "text/xml; charset=utf-8"
+                    );
+                }
+
+                return Results.BadRequest(respuesta.Mensaje);
+            })
+            .WithName("AprobacionComercial")
+            .Accepts<IFormFile>("multipart/form-data")
+            .Produces(StatusCodes.Status200OK, contentType: "text/xml")
+            .Produces(StatusCodes.Status400BadRequest)
+            .DisableAntiforgery();
+
 
             return group;
         }
